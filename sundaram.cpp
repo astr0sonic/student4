@@ -5,7 +5,7 @@ std::vector<int> sieve(int n) {
     std::vector<int> primes;
     primes.push_back(2);
 
-    vector <int> arr(n + 1);
+    std::vector <int> arr(n + 1);
     for (int i = 2; i <= n; i++) arr[i] = i;
 
     for (int i = 1; i <= n; i++) for (int j = 1; j <= i; j++) if (i + j + 2 * i * j <= n) arr[i + j + 2 * i * j] = 0;

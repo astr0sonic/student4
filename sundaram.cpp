@@ -11,7 +11,7 @@ std::vector<int> sieve(int n) {
     for (int i = 1; i <= n; i++) for (int j = 1; j <= i; j++) if (i + j + 2 * i * j <= n) arr[i + j + 2 * i * j] = 0;
     int i = 1;
     while (2 * i + 1 <= n) {
-        if (arr[i] != 0) cout << primes.push_back(2 * i + 1);
+        if (arr[i] != 0) primes.push_back(2 * i + 1);
         i++;
     }
     return primes;

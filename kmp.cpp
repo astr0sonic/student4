@@ -3,11 +3,11 @@
 
 std::vector<int> getIndices(const std::string& my_template, const std::string& text) {
     std::vector<int> result;
-    string s = my_template + "#" + text;
+    std::string s = my_template + "#" + text;
     int n = s.length();
     int t = text.length();
     int m = my_template.length();
-    vector<int> pi(n, 0);
+    std::vector<int> pi(n, 0);
     int i = 1;
     int j = 0;
     while (i < n) {

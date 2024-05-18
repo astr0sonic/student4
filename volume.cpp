@@ -2,7 +2,10 @@
 
 int getMaxVolume(int a, int b, int c, int n, int* arr) {
     int max = 0;
-    for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) if (((j - i) <= a) and (min(arr[i], arr[j]) <= c)) if ((b * (j - i) * min(arr[i], arr[j])) > max) max = b * (j - i) * min(arr[i], arr[j]);
+    for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) {
+        if (arr[i] < arr[j]) int min = arr[i]; else int min = arr[j];
+        if (((j - i) <= a) and (min <= c)) if ((b * (j - i) * min) > max) max = b * (j - i) * min;
+    }
     return max;
 }
 //10 a

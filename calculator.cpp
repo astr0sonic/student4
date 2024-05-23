@@ -118,7 +118,7 @@ double calc_pfn(std::stack<std::string> pfN) {
     while (!pfN.empty()) {
         std::string str = pfN.top();
         pfN.pop();
-        while (!isalnum(symbol[0]) and !isOperator(str[0])) {
+        while (!isalnum(str[0]) and !isOperator(str[0])) {
             str = pfN.top();
             pfN.pop();
         }

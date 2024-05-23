@@ -1,154 +1,146 @@
 #include "calculator.h"
-#include "stack"
-#include "queue"
-#include "string"
-#include "stdexcept"
-#include "cmath"
+#include <iostream>
+#include <stack>
+#include <string>
+#include <sstream>
+#include <cctype>
+#include <cmath>
 
+using namespace std;
 
-bool isOperator(char ch) {
-    return ((ch == '+') or (ch == '-') or (ch == '*') or (ch == '/') or (ch == '^') or (ch == '~'));
+// Структура для хранения операторов и их приоритетов
+struct Operator {
+    char symbol;
+    int priority;
+};
+
+// Проверка корректности арифметического выражения
+bool is_valid_expression(const string& expression) {
+    // Проверка наличия недопустимых символов
+    for (char c : expression) {
+        if (!isdigit(c) && !ispunct(c) && !isspace(c) && c != ',') {
+            return false;
+        }
+    }
+
+    // Проверка баланса скобок
+    int balance = 0;
+    for (char c : expression) {
+        if (c == '(') {
+            balance++;
+        }
+        else if (c == ')') {
+            balance--;
+            if (balance < 0) {
+                return false;
+            }
+        }
+    }
+
+    return balance == 0;
 }
 
-int get_pri(char ch) {
-    switch (ch) {
-    case '+':
-    case '-':
-        return 1;
-    case '*':
-    case '/':
-        return 2;
-    case '^':
-        return 3;
-    default:
-        return 0;
-    }
-}
+// Преобразование выражения в обратную польскую нотацию (RPN)
+string infix_to_rpn(const string& expression) {
+    stack<Operator> operators;
+    stringstream rpn;
 
-double get_val(double firstNumber, double secondNumber, std::string operators) {
-    double result = 0.0;
-    if (operators == "+") {
-        result = firstNumber + secondNumber;
-    }
-    else if (operators == "-") {
-        result = firstNumber - secondNumber;
-    }
-    else if (operators == "*") {
-        result = firstNumber * secondNumber;
-    }
-    else if (operators == "/") {
-        if (secondNumber == 0.0) {
-            throw std::logic_error("/0");
+    // Определение приоритетов операторов
+    map<char, int> operator_priorities = {
+        {'+', 1}, {'-', 1}, {'*', 2}, {'/', 2}, {'^', 3}
+    };
+
+    for (char c : expression) {
+        // Пропускаем пробелы
+        if (isspace(c)) {
+            continue;
         }
-        else result = firstNumber / secondNumber;
-    }
-    else if (operators == "^") {
-        result = std::pow(firstNumber, secondNumber);
-    }
-    return result;
-}
 
-void get_pfn(const std::string& text, std::stack<std::string>* pfN) {
-    std::stack<char> operators;
-    int i = 0;
-    int count_skob = 0;
-
-    for (char ch : text) {
-        if (isspace(ch)) i++;
-
-        if (isdigit(ch) or ch == '.') {
-            std::string digit = "";
-            while (i < text.size() and (isdigit(text[i]) or text[i] == '.')) digit += text[i++];
-            i--;
-            pfN->push(digit);
+        // Если символ - цифра или точка, добавляем его в RPN
+        if (isdigit(c) || c == '.') {
+            rpn << c;
         }
-        else if (ch == '(') {
-            operators.push(ch);
-            count_skob++;
+        else if (c == '(') {
+            operators.push({ c, 0 });
         }
-        else if (ch == ')') {
-            while (operators.top() != '(') {
-                pfN->push(std::string(1, operators.top()));
+        else if (c == ')') {
+            while (!operators.empty() && operators.top().symbol != '(') {
+                rpn << " " << operators.top().symbol;
                 operators.pop();
             }
-            count_skob--;
-            operators.pop();
+            operators.pop(); // Удаляем '('
         }
-        else if (isOperator(ch)) {
-            if (ch == '-' and (i == 0 or text[i - 1] == '(')) operators.push('~');
-            else {
-                while (!operators.empty() and get_pri(operators.top()) >= get_pri(ch)) {
-                    pfN->push(std::string(1, operators.top()));
-                    operators.pop();
-                }
-                operators.push(ch);
+        else { // Если символ - оператор
+            // Добавляем в RPN предыдущие операторы с приоритетом не меньше
+            while (!operators.empty() && operator_priorities[c] <= operators.top().priority) {
+                rpn << " " << operators.top().symbol;
+                operators.pop();
             }
+            operators.push({ c, operator_priorities[c] });
+            rpn << " ";
         }
-        else throw std::logic_error("invalid");
-        i++;
     }
-    if (count_skob > 0) throw std::logic_error("invalid");
+
+    // Добавляем в RPN оставшиеся операторы
     while (!operators.empty()) {
-        pfN->push(std::string(1, operators.top()));
+        rpn << " " << operators.top().symbol;
         operators.pop();
     }
+
+    return rpn.str();
 }
 
-void rev_stack(std::stack<std::string> pfN, std::stack<std::string>* reversePostfixNotation) {
-    while (!pfN.empty()) {
-        reversePostfixNotation->push(pfN.top());
-        pfN.pop();
-    }
-}
+// Вычисление выражения в RPN
+double calculate_rpn(const string& rpn) {
+    stack<double> operands;
 
-double calc_pfn(std::stack<std::string> pfN) {
-    std::stack<double> stackRPN;
+    stringstream ss(rpn);
+    string token;
+    while (getline(ss, token, ' ')) {
+        if (token == "+" || token == "-" || token == "*" || token == "/" || token == "^") {
+            // Извлекаем два операнда из стека
+            double operand2 = operands.top();
+            operands.pop();
+            double operand1 = operands.top();
+            operands.pop();
 
-    while (!pfN.empty()) {
-        std::string str = pfN.top();
-        pfN.pop();
-        while (!isalnum(str[0]) and !isOperator(str[0])) {
-            str = pfN.top();
-            pfN.pop();
-        }
-
-        double operand = 0.0;
-        if (isdigit(str[0])) {
-            operand = std::stod(str);
-            stackRPN.push(operand);
-        }
-        else if (isOperator(str[0])) {
-            if (str[0] == '~') {
-                double tempValue = stackRPN.top();
-                stackRPN.pop();
-                tempValue = -tempValue;
-                stackRPN.push(tempValue);
+            // Выполняем операцию
+            if (token == "+") {
+                operands.push(operand1 + operand2);
             }
-            else {
-                if (stackRPN.size() < 2) throw std::logic_error("не хватает");
-                double first = stackRPN.top();
-                stackRPN.pop();
-                double sec = stackRPN.top();
-                stackRPN.pop();
-                double res = get_val(sec, first, str);
-
-                stackRPN.push(res);
+            else if (token == "-") {
+                operands.push(operand1 - operand2);
+            }
+            else if (token == "*") {
+                operands.push(operand1 * operand2);
+            }
+            else if (token == "/") {
+                if (operand2 == 0) {
+                    throw runtime_error("Деление на ноль!");
+                }
+                operands.push(operand1 / operand2);
+            }
+            else if (token == "^") {
+                operands.push(pow(operand1, operand2));
             }
         }
+        else {
+            // Преобразование токена в число
+            double operand = stod(token);
+            operands.push(operand);
+        }
     }
-    if (stackRPN.size() != 1) throw std::invalid_argument("перебор");
-    return stackRPN.top();
+
+    // Результат вычисления
+    return operands.top();
 }
 
-double calculate(const std::string& expression) {
-    std::stack<std::string> stack_pfN;
-    std::stack <std::string> rev_stack_pfN;
+// Функция calculate для вычисления выражения
+double calculate(const string& expr) {
+    if (!is_valid_expression(expr)) {
+        throw runtime_error("Некорректное выражение!");
+    }
 
-    get_pfn(expression, &stack_pfN);
-
-    rev_stack(stack_pfN, &rev_stack_pfN);
-
-    double result = calc_pfn(rev_stack_pfN);
-
-    return result;
+    string rpn = infix_to_rpn(expr);
+    return calculate_rpn(rpn);
 }

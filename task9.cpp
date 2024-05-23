@@ -220,7 +220,7 @@ int main(int argc, char** argv) {
 	}
 
 	ofstream out(outputFileName);
-	out << result << endl;
+	out << result << std::endl;
 	out.close();
 
 	return 0;

@@ -11,30 +11,43 @@ bool isOperator(char ch) {
 }
 
 int get_pri(char ch) {
-    int pri_operator = -1;
     switch (ch) {
-    case '(':
-        pri_operator = OPEN_BRACKET;
-        break;
-    case ')':
-        pri_operator = CLOSED_BRACKET;
     case '+':
     case '-':
-        pri_operator = PLUS_OR_MINUS;
-        break;
+        return 1;
     case '*':
     case '/':
-        pri_operator = MULT_OR_DIV;
-        break;
+        return 2;
     case '^':
-        pri_operator = DEGREE;
-        break;
+        return 3;
     default:
-        pri_operator = UNARY_MINUS;
-        break;
+        return 0;
     }
-    return pri_operator;
 }
+
+double get_val(double firstNumber, double secondNumber, std::string operators) {
+    double result = 0.0;
+    if (operators == "+") {
+        result = firstNumber + secondNumber;
+    }
+    else if (operators == "-") {
+        result = firstNumber - secondNumber;
+    }
+    else if (operators == "*") {
+        result = firstNumber * secondNumber;
+    }
+    else if (operators == "/") {
+        if (secondNumber == 0.0) {
+            throw std::logic_error("/0");
+        }
+        else result = firstNumber / secondNumber;
+    }
+    else if (operators == "^") {
+        result = std::pow(firstNumber, secondNumber);
+    }
+    return result;
+}
+
 void get_pfn(const std::string& text, std::stack<std::string>* pfN) {
     std::stack<char> operators;
     int i = 0;
@@ -86,31 +99,6 @@ void rev_stack(std::stack<std::string> pfN, std::stack<std::string>* reversePost
         reversePostfixNotation->push(pfN.top());
         pfN.pop();
     }
-}
-
-double get_val(double firstNumber, double secondNumber, std::string operators) {
-    double result = 0.0;
-    if (operators == "+") {
-        result = firstNumber + secondNumber;
-    }
-    else if (operators == "-") {
-        result = firstNumber - secondNumber;
-    }
-    else if (operators == "*") {
-        result = firstNumber * secondNumber;
-    }
-    else if (operators == "/") {
-        if (secondNumber == 0.0) {
-            throw std::logic_error("/0");
-        }
-        else {
-            result = firstNumber / secondNumber;
-        }
-    }
-    else if (operators == "^") {
-        result = std::pow(firstNumber, secondNumber);
-    }
-    return result;
 }
 
 double calc_pfn(std::stack<std::string> pfN) {

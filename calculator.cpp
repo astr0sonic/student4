@@ -5,53 +5,128 @@
 #include <cctype>
 #include <cmath>
 
-bool isOperator(char ch)
-{
-    return (ch == '+' or ch == '-' or ch == '*' or ch == '/' or ch == '^' or ch == '~');
+const int OPEN_BRACKET = 0;
+const int CLOSED_BRACKET = 1;
+const int PLUS_OR_MINUS = 2;
+const int MULT_OR_DIV = 3;
+const int DEGREE = 4;
+const int UNARY_MINUS = 5;
+
+void getPostfixNotation(const std::string& expression, std::stack<std::string>* postfixNotation);
+void reverseStack(std::stack<std::string> postfixNotation, std::stack<std::string>* reversePostfixNotation);
+double calculatePostfixNotation(std::stack<std::string> postfixNotation);
+bool isOperator(char symbol);
+int getPriorityOperators(char symbol);
+double getExpressionValue(double firstNumber, double secondNumber, std::string operators);
+
+double calculate(const std::string& expr) {
+    std::stack<std::string> stackPostfixNotation;
+    std::stack <std::string> reverseStackPostfixNotation;
+
+    getPostfixNotation(expr, &stackPostfixNotation);
+
+    reverseStack(stackPostfixNotation, &reverseStackPostfixNotation);
+
+    double result = calculatePostfixNotation(reverseStackPostfixNotation);
+
+    return result;
 }
 
-int get_pri(char ch)
+void getPostfixNotation(const std::string& expression, std::stack<std::string>* postfixNotation)
+{
+    // Helper stack for storing operator's
+    std::stack<char> operators;
+    int index = 0, openBracketsCounter = 0;
+
+
+    for (char symbol : expression) {
+        if (isspace(symbol)) {
+            index++;
+            continue;
+        }
+
+        if (isdigit(symbol) || symbol == '.') {
+            std::string digit = "";
+            while (index < expression.size() && (isdigit(expression[index]) || expression[index] == '.')) {
+                digit += expression[index++];
+            }
+            index--;
+            postfixNotation->push(digit);
+        }
+        else if (symbol == '(') {
+            operators.push(symbol);
+            openBracketsCounter++;
+        }
+        else if (symbol == ')') {
+
+            while (operators.top() != '(') {
+                postfixNotation->push(std::string(1, operators.top()));
+                operators.pop();
+            }
+            openBracketsCounter--;
+            operators.pop();
+        }
+        else if (isOperator(symbol)) {
+            if (symbol == '-' && (index == 0 || expression[index - 1] == '(')) {
+                operators.push('~'); // Unary Minus
+            }
+            else {
+                while (!operators.empty() && getPriorityOperators(operators.top()) >= getPriorityOperators(symbol)) {
+                    postfixNotation->push(std::string(1, operators.top()));
+                    operators.pop();
+                }
+                operators.push(symbol);
+            }
+        }
+        else {
+            throw std::logic_error("invalid");
+        }
+        index++;
+    }
+
+    if (openBracketsCounter > 0) {
+        throw std::logic_error("invalid");
+    }
+
+    while (!operators.empty()) {
+        postfixNotation->push(std::string(1, operators.top()));
+        operators.pop();
+    }
+}
+
+bool isOperator(char symbol)
+{
+    return (symbol == '+'  symbol == '-'  symbol == '*'  symbol == '/'  symbol == '^' || symbol == '~');
+}
+
+int getPriorityOperators(char symbol)
 {
     int priorityOperator = -1;
-    switch (ch)
+    switch (symbol)
     {
     case '(':
-        priorityOperator = 0;
+        priorityOperator = OPEN_BRACKET;
         break;
     case ')':
-        priorityOperator = 1;
+        priorityOperator = CLOSED_BRACKET;
     case '+':
     case '-':
-        priorityOperator = 2;
+        priorityOperator = PLUS_OR_MINUS;
         break;
     case '*':
     case '/':
-        priorityOperator = 3;
+        priorityOperator = MULT_OR_DIV;
         break;
     case '^':
-        priorityOperator = 4;
+        priorityOperator = DEGREE;
         break;
     default:
-        priorityOperator = 5;
+        priorityOperator = UNARY_MINUS;
         break;
     }
+
     return priorityOperator;
 }
-
-double get_val(double f, double s, std::string operators){
-    double c = 0.0;
-    if (operators == "+") return (f + s);
-    if (operators == "-") return (f - s);
-    if (operators == "*") return (f * s);
-    else if (operators == "/") {
-        if (s == 0.0) {
-            throw std::logic_error("/0");
-        }
-        else return (f / s);
-    }
-    if (operators == "^") return std::pow(f, s);
-}
-
 void reverseStack(std::stack<std::string> postfixNotation, std::stack<std::string>* reversePostfixNotation)
 {
     while (!postfixNotation.empty()) {
@@ -60,24 +135,27 @@ void reverseStack(std::stack<std::string> postfixNotation, std::stack<std::strin
     }
 }
 
-double calc_pfn(std::stack<std::string> postfixNotation)
+double calculatePostfixNotation(std::stack<std::string> postfixNotation)
 {
     std::stack<double> stackRPN;
 
     while (!postfixNotation.empty()) {
-        std::string str = postfixNotation.top();
+
+        std::string symbol = postfixNotation.top();
         postfixNotation.pop();
-        while (!isalnum(str[0]) && !isOperator(str[0])) {
-            str = postfixNotation.top();
+
+        while (!isalnum(symbol[0]) && !isOperator(symbol[0])) {
+            symbol = postfixNotation.top();
             postfixNotation.pop();
         }
+
         double operand = 0.0;
-        if (isdigit(str[0])) {
-            operand = std::stod(str);
+        if (isdigit(symbol[0])) {
+            operand = std::stod(symbol);
             stackRPN.push(operand);
         }
-        else if (isOperator(str[0])) {
-            if (str[0] == '~') {
+        else if (isOperator(symbol[0])) {
+            if (symbol[0] == '~') {
                 double tempValue = stackRPN.top();
                 stackRPN.pop();
                 tempValue = -tempValue;
@@ -85,79 +163,50 @@ double calc_pfn(std::stack<std::string> postfixNotation)
             }
             else {
                 if (stackRPN.size() < 2) {
-                    throw std::logic_error("Not enough");
+                    throw std::logic_error("Not enough operands for operation");
                 }
 
                 double firstNumber = stackRPN.top();
                 stackRPN.pop();
                 double secondNumber = stackRPN.top();
                 stackRPN.pop();
-                double resultOperations = get_val(secondNumber, firstNumber, str);
+
+                double resultOperations = getExpressionValue(secondNumber, firstNumber, symbol);
+
                 stackRPN.push(resultOperations);
             }
         }
     }
+
     if (stackRPN.size() != 1) {
-        throw std::invalid_argument("too mach in the stack");
+        throw std::invalid_argument("Invalid expression: more than one value left in stack");
     }
+
     return stackRPN.top();
 }
 
-void get_post(const std::string& expression, std::stack<std::string>* postfixNotation){
-    std::stack<char> operators;
-    int i = 0;
-    int skob = 0;
-    for (char ch : expression) {
-        if (isspace(ch)) i++;
-        if (isdigit(ch) or ch == '.') {
-            std::string digit = "";
-            while (i < expression.size() && (isdigit(expression[i]) || expression[i] == '.')) {
-                digit += expression[i++];
-            }
-            i--;
-            postfixNotation->push(digit);
-        }
-        else if (ch == '(') {
-            operators.push(ch);
-            skob++;
-        }
-        else if (ch == ')') {
-
-            while (operators.top() != '(') {
-                postfixNotation->push(std::string(1, operators.top()));
-                operators.pop();
-            }
-            skob--;
-            operators.pop();
-        }
-        else if (isOperator(ch)) {
-            if (ch == '-' and (i == 0 or expression[i - 1] == '(')) operators.push('~'); // Unary Minus
-            else {
-                while (!operators.empty() && get_pri(operators.top()) >= get_pri(ch)) {
-                    postfixNotation->push(std::string(1, operators.top()));
-                    operators.pop();
-                }
-                operators.push(ch);
-            }
+double getExpressionValue(double firstNumber, double secondNumber, std::string operators)
+{
+    double result = 0.0;
+    if (operators == "+") {
+        result = firstNumber + secondNumber;
+    }
+    else if (operators == "-") {
+        result = firstNumber - secondNumber;
+    }
+    else if (operators == "*") {
+        result = firstNumber * secondNumber;
+    }
+    else if (operators == "/") {
+        if (secondNumber == 0.0) {
+            throw std::logic_error("Division by zero");
         }
         else {
-            throw std::logic_error("invalid");
+            result = firstNumber / secondNumber;
         }
-        i++;
     }
-    if (skob > 0) {
-        throw std::logic_error("invalid");
+    else if (operators == "^") {
+        result = std::pow(firstNumber, secondNumber);
     }
-    while (!operators.empty()) {
-        postfixNotation->push(std::string(1, operators.top()));
-        operators.pop();
-    }
-}
-
-double calculate(const std::string& expr) {
-    std::stack<std::string> stack;
-    std::stack <std::string> revers;
-    get_post(expr, &stack);
-    reverseStack(stack, &revers);
-    return calc_pfn(revers);
+    return result;
 }

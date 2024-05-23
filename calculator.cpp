@@ -1,4 +1,3 @@
-#include "calculator.h"
 #include <iostream>
 #include <stack>
 #include <string>
@@ -6,144 +5,149 @@
 #include <cctype>
 #include <cmath>
 
-using namespace std;
-
-// Структура для хранения операторов и их приоритетов
-struct Operator {
-    char symbol;
-    int priority;
-
-    // Конструктор
-    Operator(char symbol, int priority) : symbol(symbol), priority(priority) {}
-};
-
-// Проверка корректности арифметического выражения
-bool is_valid_expression(const string & expression) {
-    // Проверка наличия недопустимых символов
-    for (char c : expression) {
-        if (!isdigit(c) && !ispunct(c) && !isspace(c) && c != ',') {
-            return false;
-        }
-    }
-
-    // Проверка баланса скобок
-    int balance = 0;
-    for (char c : expression) {
-        if (c == '(') {
-            balance++;
-        }
-        else if (c == ')') {
-            balance--;
-            if (balance < 0) {
-                return false;
-            }
-        }
-    }
-
-    return balance == 0;
+bool isOperator(char ch)
+{
+    return (ch == '+' or ch == '-' or ch == '*' or ch == '/' or ch == '^' or ch == '~');
 }
 
-// Преобразование выражения в обратную польскую нотацию (RPN)
-string infix_to_rpn(const string & expression) {
-    stack<Operator> operators;
-    stringstream rpn;
+int get_pri(char ch)
+{
+    int priorityOperator = -1;
+    switch (ch)
+    {
+    case '(':
+        priorityOperator = 0;
+        break;
+    case ')':
+        priorityOperator = 1;
+    case '+':
+    case '-':
+        priorityOperator = 2;
+        break;
+    case '*':
+    case '/':
+        priorityOperator = 3;
+        break;
+    case '^':
+        priorityOperator = 4;
+        break;
+    default:
+        priorityOperator = 5;
+        break;
+    }
+    return priorityOperator;
+}
 
-    // Определение приоритетов операторов
-    map<char, int> operator_priorities = {
-        {'+', 1}, {'-', 1}, {'*', 2}, {'/', 2}, {'^', 3}
-    };
+double get_val(double f, double s, std::string operators)
+{
+    if (operators == "+") return (f + s);
+    if (operators == "-") return (f - s);
+    if (operators == "*") return (f * s);
+    else if (operators == "/") {
+        if (secondNumber == 0.0) throw std::logic_error("/0");
+        else return (f / s);
+    }
+    if (operators == "^") return std::pow(f, s);
+}
 
-    for (char c : expression) {
-        // Пропускаем пробелы
-        if (isspace(c)) {
-            continue;
-        }
+void reverseStack(std::stack<std::string> postfixNotation, std::stack<std::string>* reversePostfixNotation)
+{
+    while (!postfixNotation.empty()) {
+        reversePostfixNotation->push(postfixNotation.top());
+        postfixNotation.pop();
+    }
+}
 
-        // Если символ - цифра или точка, добавляем его в RPN
-        if (isdigit(c) || c == '.') {
-            rpn << c;
+double calc_pfn(std::stack<std::string> postfixNotation)
+{
+    std::stack<double> stackRPN;
+
+    while (!postfixNotation.empty()) {
+        std::string str = postfixNotation.top();
+        postfixNotation.pop();
+        while (!isalnum(str[0]) && !isOperator(str[0])) {
+            str = postfixNotation.top();
+            postfixNotation.pop();
         }
-        else if (c == '(') {
-            operators.push(Operator{ c, 0 }); // Используем конструктор
+        double operand = 0.0;
+        if (isdigit(str[0])) {
+            operand = std::stod(str);
+            stackRPN.push(operand);
         }
-        else if (c == ')') {
-            while (!operators.empty() && operators.top().symbol != '(') {
-                rpn << " " << operators.top().symbol;
-                operators.pop();
+        else if (isOperator(str[0])) {
+            if (str[0] == '~') {
+                double tempValue = stackRPN.top();
+                stackRPN.pop();
+                tempValue = -tempValue;
+                stackRPN.push(tempValue);
             }
-            operators.pop(); // Удаляем '('
-        }
-        else { // Если символ - оператор
-            // Добавляем в RPN предыдущие операторы с приоритетом не меньше
-            while (!operators.empty() && operator_priorities[c] <= operators.top().priority) {
-                rpn << " " << operators.top().symbol;
-                operators.pop();
+            else {
+                if (stackRPN.size() < 2) throw std::logic_error("Not enough");
+
+                double firstNumber = stackRPN.top();
+                stackRPN.pop();
+                double secondNumber = stackRPN.top();
+                stackRPN.pop();
+                double resultOperations = get_val(secondNumber, firstNumber, str);
+                stackRPN.push(resultOperations);
             }
-            operators.push(Operator{ c, operator_priorities[c] }); // Используем конструктор
-            rpn << " ";
         }
     }
+    if (stackRPN.size() != 1) throw std::invalid_argument("too mach in the stack");
+    return stackRPN.top();
+}
 
-    // Добавляем в RPN оставшиеся операторы
+void get_post(const std::string& expression, std::stack<std::string>* postfixNotation){
+    std::stack<char> operators;
+    int i = 0;
+    int skob = 0;
+    for (char ch : expression) {
+        if (isspace(ch)) i++;
+        if (isdigit(ch) or ch == '.') {
+            std::string digit = "";
+            while (i < expression.size() && (isdigit(expression[i]) || expression[i] == '.')) {
+                digit += expression[i++];
+            }
+            i--;
+            postfixNotation->push(digit);
+        }
+        else if (ch == '(') {
+            operators.push(ch);
+            skob++;
+        }
+        else if (ch == ')') {
+
+            while (operators.top() != '(') {
+                postfixNotation->push(std::string(1, operators.top()));
+                operators.pop();
+            }
+            skob--;
+            operators.pop();
+        }
+        else if (isOperator(ch)) {
+            if (ch == '-' and (i == 0 or expression[i - 1] == '(')) operators.push('~'); // Unary Minus
+            else {
+                while (!operators.empty() && get_pri(operators.top()) >= get_pri(ch)) {
+                    postfixNotation->push(std::string(1, operators.top()));
+                    operators.pop();
+                }
+                operators.push(ch);
+            }
+        }
+        else throw std::logic_error("invalid");
+        i++;
+    }
+    if (skob > 0) throw std::logic_error("invalid");
     while (!operators.empty()) {
-        rpn << " " << operators.top().symbol;
+        postfixNotation->push(std::string(1, operators.top()));
         operators.pop();
     }
-
-    return rpn.str();
 }
 
-// Вычисление выражения в RPN
-double calculate_rpn(const string & rpn) {
-    stack<double> operands;
-
-    stringstream ss(rpn);
-    string token;
-    while (getline(ss, token, ' ')) {
-        if (token == "+" || token == "-" || token == "*" || token == "/" || token == "^") {
-            // Извлекаем два операнда из стека
-            double operand2 = operands.top();
-            operands.pop();
-            double operand1 = operands.top();
-            operands.pop();
-
-            // Выполняем операцию
-            if (token == "+") {
-                operands.push(operand1 + operand2);
-            }
-            else if (token == "-") {
-                operands.push(operand1 - operand2);
-            }
-            else if (token == "*") {
-                operands.push(operand1 * operand2);
-            }
-            else if (token == "/") {
-                if (operand2 == 0) {
-                    throw runtime_error("Деление на ноль!");
-                }
-                operands.push(operand1 / operand2);
-            }
-            else if (token == "^") {
-                operands.push(pow(operand1, operand2));
-            }
-        }
-        else {
-            // Преобразование токена в число
-            double operand = stod(token);
-            operands.push(operand);
-        }
-    }
-
-    // Результат вычисления
-    return operands.top();
-}
-
-// Функция calculate для вычисления выражения
-double calculate(const string & expr) {
-    if (!is_valid_expression(expr)) {
-        throw runtime_error("Некорректное выражение!");
-    }
-
-    string rpn = infix_to_rpn(expr);
-    return calculate_rpn(rpn);
+double calculate(const std::string& expr) {
+    std::stack<std::string> stack;
+    std::stack <std::string> revers;
+    get_post(expr, &stack);
+    reverseStack(stack, &revers);
+    return calc_pfn(revers);
 }

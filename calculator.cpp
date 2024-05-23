@@ -12,10 +12,13 @@ using namespace std;
 struct Operator {
     char symbol;
     int priority;
+
+    // Конструктор
+    Operator(char symbol, int priority) : symbol(symbol), priority(priority) {}
 };
 
 // Проверка корректности арифметического выражения
-bool is_valid_expression(const string& expression) {
+bool is_valid_expression(const string & expression) {
     // Проверка наличия недопустимых символов
     for (char c : expression) {
         if (!isdigit(c) && !ispunct(c) && !isspace(c) && c != ',') {
@@ -41,7 +44,7 @@ bool is_valid_expression(const string& expression) {
 }
 
 // Преобразование выражения в обратную польскую нотацию (RPN)
-string infix_to_rpn(const string& expression) {
+string infix_to_rpn(const string & expression) {
     stack<Operator> operators;
     stringstream rpn;
 
@@ -61,7 +64,7 @@ string infix_to_rpn(const string& expression) {
             rpn << c;
         }
         else if (c == '(') {
-            operators.push({ c, 0 });
+            operators.push(Operator{ c, 0 }); // Используем конструктор
         }
         else if (c == ')') {
             while (!operators.empty() && operators.top().symbol != '(') {
@@ -76,7 +79,7 @@ string infix_to_rpn(const string& expression) {
                 rpn << " " << operators.top().symbol;
                 operators.pop();
             }
-            operators.push({ c, operator_priorities[c] });
+            operators.push(Operator{ c, operator_priorities[c] }); // Используем конструктор
             rpn << " ";
         }
     }
@@ -91,7 +94,7 @@ string infix_to_rpn(const string& expression) {
 }
 
 // Вычисление выражения в RPN
-double calculate_rpn(const string& rpn) {
+double calculate_rpn(const string & rpn) {
     stack<double> operands;
 
     stringstream ss(rpn);
@@ -136,7 +139,7 @@ double calculate_rpn(const string& rpn) {
 }
 
 // Функция calculate для вычисления выражения
-double calculate(const string& expr) {
+double calculate(const string & expr) {
     if (!is_valid_expression(expr)) {
         throw runtime_error("Некорректное выражение!");
     }

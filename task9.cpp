@@ -69,7 +69,6 @@ std::string decode(const std::string& encoded, std::map<char, std::string>& code
 int main(int argc, char** argv) {
 	string inputFileName = argv[1];
 	string outputFileName = argv[2];
-
 	string result = "";
 
 	int len = inputFileName.length();

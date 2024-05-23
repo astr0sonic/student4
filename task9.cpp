@@ -16,6 +16,28 @@ struct low_pri {
 	bool operator()(Node* a, Node* b) return a->arr > b->arr;
 };
 
+void encodeHelper(Node* node, std::string code, std::map<char, std::string>& codes) {
+	if (!node) return;
+	if (node->inf != '%') codes[node->inf] = code;
+	encodeHelper(node->l, code + "0", codes);
+	encodeHelper(node->r, code + "1", codes);
+}
+
+std::string decode(const std::string& encoded, std::map<char, std::string>& codes) {
+	std::string decoded = "";
+	std::string currCode = "";
+	for (char ch : encoded) {
+		currCode += ch;
+		for (const auto& entry : codes) {
+			if (entry.second == currCode) {
+				decoded += entry.first;
+				currCode = "";
+				break;
+			}
+		}
+	}
+	return decoded;
+}
 std::string encode(const std::string& str) {
 	std::map<char, int> arr;
 	std::priority_queue<Node*, std::vector<Node*>, low_pri> queue;
@@ -41,29 +63,6 @@ std::string encode(const std::string& str) {
 	encodeHelper(root, code, codes);
 	for (char ch : str) encoded += codes[ch];
 	return encoded;
-}
-
-void encodeHelper(Node* node, std::string code, std::map<char, std::string>& codes) {
-	if (!node) return;
-	if (node->inf != '%') codes[node->inf] = code;
-	encodeHelper(node->l, code + "0", codes);
-	encodeHelper(node->r, code + "1", codes);
-}
-
-std::string decode(const std::string& encoded, std::map<char, std::string>& codes) {
-	std::string decoded = "";
-	std::string currCode = "";
-	for (char ch : encoded) {
-		currCode += ch;
-		for (const auto& entry : codes) {
-			if (entry.second == currCode) {
-				decoded += entry.first;
-				currCode = "";
-				break;
-			}
-		}
-	}
-	return decoded;
 }
 
 string testEncode(const string& inputFileName, const string& outputFileName) {

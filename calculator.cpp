@@ -38,13 +38,15 @@ int get_pri(char ch)
     return priorityOperator;
 }
 
-double get_val(double f, double s, std::string operators)
-{
+double get_val(double f, double s, std::string operators){
+    double c = 0.0;
     if (operators == "+") return (f + s);
     if (operators == "-") return (f - s);
     if (operators == "*") return (f * s);
     else if (operators == "/") {
-        if (secondNumber == 0.0) throw std::logic_error("/0");
+        if (s == 0.0) {
+            throw std::logic_error("/0");
+        }
         else return (f / s);
     }
     if (operators == "^") return std::pow(f, s);
@@ -82,7 +84,9 @@ double calc_pfn(std::stack<std::string> postfixNotation)
                 stackRPN.push(tempValue);
             }
             else {
-                if (stackRPN.size() < 2) throw std::logic_error("Not enough");
+                if (stackRPN.size() < 2) {
+                    throw std::logic_error("Not enough");
+                }
 
                 double firstNumber = stackRPN.top();
                 stackRPN.pop();
@@ -93,7 +97,9 @@ double calc_pfn(std::stack<std::string> postfixNotation)
             }
         }
     }
-    if (stackRPN.size() != 1) throw std::invalid_argument("too mach in the stack");
+    if (stackRPN.size() != 1) {
+        throw std::invalid_argument("too mach in the stack");
+    }
     return stackRPN.top();
 }
 
@@ -134,10 +140,14 @@ void get_post(const std::string& expression, std::stack<std::string>* postfixNot
                 operators.push(ch);
             }
         }
-        else throw std::logic_error("invalid");
+        else {
+            throw std::logic_error("invalid");
+        }
         i++;
     }
-    if (skob > 0) throw std::logic_error("invalid");
+    if (skob > 0) {
+        throw std::logic_error("invalid");
+    }
     while (!operators.empty()) {
         postfixNotation->push(std::string(1, operators.top()));
         operators.pop();

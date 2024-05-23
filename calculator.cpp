@@ -1,7 +1,12 @@
 #include "calculator.h"
+#include "stack"
+#include "queue"
+#include "string"
 
-bool isOperator(char ch)
-return ((ch == '+') or (ch == '-') or (ch == '*') or (ch == '/') or (ch == '^') or (ch == '~'));
+
+bool isOperator(char ch) {
+    return ((ch == '+') or (ch == '-') or (ch == '*') or (ch == '/') or (ch == '^') or (ch == '~'));
+}
 
 int get_pri(char ch) {
     int pri_operator = -1;
@@ -28,7 +33,7 @@ int get_pri(char ch) {
     }
     return pri_operator;
 }
-void get_pfn(const std::string & text, std::stack<std::string>*pfN) {
+void get_pfn(const std::string& text, std::stack<std::string>* pfN) {
     std::stack<char> operators;
     int i = 0;
     int count_skob = 0;
@@ -74,7 +79,7 @@ void get_pfn(const std::string & text, std::stack<std::string>*pfN) {
     }
 }
 
-void rev_stack(std::stack<std::string> pfN, std::stack<std::string>*reversePostfixNotation) {
+void rev_stack(std::stack<std::string> pfN, std::stack<std::string>* reversePostfixNotation) {
     while (!pfN.empty()) {
         reversePostfixNotation->push(pfN.top());
         pfN.pop();
@@ -145,7 +150,7 @@ double calc_pfn(std::stack<std::string> pfN) {
     return stackRPN.top();
 }
 
-double calculate(const std::string & expression) {
+double calculate(const std::string& expression) {
     std::stack<std::string> stack_pfN;
     std::stack <std::string> rev_stack_pfN;
 

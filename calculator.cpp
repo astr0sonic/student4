@@ -3,6 +3,7 @@
 #include "queue"
 #include "string"
 #include "stdexcept"
+#include "cmath"
 
 
 bool isOperator(char ch) {

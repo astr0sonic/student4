@@ -2,6 +2,7 @@
 #include "stack"
 #include "queue"
 #include "string"
+#include "stdexcept"
 
 
 bool isOperator(char ch) {

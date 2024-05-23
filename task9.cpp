@@ -66,27 +66,6 @@ std::string decode(const std::string& encoded, std::map<char, std::string>& code
 	return decoded;
 }
 
-int main(int argc, char** argv) {
-	string inputFileName = argv[1];
-	string outputFileName = argv[2];
-	string result = "";
-
-	int len = inputFileName.length();
-	bool isDecoding = static_cast<int>(inputFileName[len - 5]) - static_cast<int>('0') >= 4;
-	if (isDecoding) {
-		result = testDecode(inputFileName, outputFileName);
-	}
-	else {
-		result = testEncode(inputFileName, outputFileName);
-	}
-
-	ofstream out(outputFileName);
-	out << result << endl;
-	out.close();
-
-	return 0;
-}
-
 string testEncode(const string& inputFileName, const string& outputFileName) {
 	ifstream in(inputFileName);
 	string str = "";
@@ -117,4 +96,25 @@ string testDecode(const string& inputFileName, const string& outputFileName) {
 
 	string decoded = decode(str, codes);
 	return decoded;
+}
+
+int main(int argc, char** argv) {
+	string inputFileName = argv[1];
+	string outputFileName = argv[2];
+	string result = "";
+
+	int len = inputFileName.length();
+	bool isDecoding = static_cast<int>(inputFileName[len - 5]) - static_cast<int>('0') >= 4;
+	if (isDecoding) {
+		result = testDecode(inputFileName, outputFileName);
+	}
+	else {
+		result = testEncode(inputFileName, outputFileName);
+	}
+
+	ofstream out(outputFileName);
+	out << result << endl;
+	out.close();
+
+	return 0;
 }

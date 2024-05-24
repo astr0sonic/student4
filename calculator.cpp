@@ -97,7 +97,7 @@ void getPostfixNotation(const std::string& expression, std::stack<std::string>* 
 
 bool isOperator(char symbol)
 {
-    return (symbol == '+'  symbol == '-'  symbol == '*'  symbol == '/'  symbol == '^' || symbol == '~');
+    return (symbol == '+' or symbol == '-' or symbol == '*' or symbol == '/' or symbol == '^' or symbol == '~');
 }
 
 int getPriorityOperators(char symbol)
